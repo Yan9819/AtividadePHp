@@ -1,0 +1,46 @@
+<?php
+try {
+    $db = new PDO('sqlite:database.sqlite');
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    $db->exec("CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        email TEXT NOT NULL
+    )");
+
+    $result = $db->query("SELECT * FROM usuarios");
+
+} catch (PDOException $e) {
+    die("Erro ao conectar ao banco de dados: " . $e->getMessage());
+}
+?>
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Usuários</title>
+</head>
+<body>
+    <h1>Usuários Cadastrados</h1>
+    <a href="index.html">Inserir Novo Usuário</a>
+    <br><br>
+
+    <table border="1" cellpadding="8" cellspacing="0">
+        <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Email</th>
+        </tr>
+        <?php foreach ($result as $row): ?>
+        <tr>
+            <td><?= htmlspecialchars($row['id']) ?></td>
+            <td><?= htmlspecialchars($row['nome']) ?></td>
+            <td><?= htmlspecialchars($row['email']) ?></td>
+        </tr>
+        <?php endforeach; ?>
+    </table>
+</body>
+</html>
+
