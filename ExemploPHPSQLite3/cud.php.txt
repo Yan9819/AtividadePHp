@@ -1,0 +1,70 @@
+<?php
+function conectar() {
+    return new PDO('sqlite:database.db');
+}
+
+function inicializar() {
+    $db = conectar();
+    $db->exec("CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        email TEXT NOT NULL
+    )");
+}
+
+inicializar();
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $acao = $_POST["acao"] ?? "";
+    $id = $_POST["id"] ?? "";
+    $nome = trim($_POST["nome"] ?? "");
+    $email = trim($_POST["email"] ?? "");
+    $db = conectar();
+
+    if ($acao === "Salvar" && $nome && $email) {
+        if ($id) {
+            $stmt = $db->prepare("UPDATE usuarios SET nome = :nome, email = :email WHERE id = :id");
+            $stmt->bindParam(":nome", $nome);
+            $stmt->bindParam(":email", $email);
+            $stmt->bindParam(":id", $id);
+        } else {
+            $stmt = $db->prepare("INSERT INTO usuarios (nome, email) VALUES (:nome, :email)");
+            $stmt->bindParam(":nome", $nome);
+            $stmt->bindParam(":email", $email);
+        }
+        $stmt->execute();
+        echo "<script>window.location.href='index.html';</script>";
+        exit;
+    }
+
+    if ($acao === "Excluir" && $id) {
+        $stmt = $db->prepare("DELETE FROM usuarios WHERE id = :id");
+        $stmt->bindParam(":id", $id);
+        $stmt->execute();
+        echo "<script>window.location.href='index.html';</script>";
+        exit;
+    }
+}
+
+// Exibição da tabela HTML (GET)
+$db = conectar();
+$usuarios = $db->query("SELECT * FROM usuarios");
+
+echo "<table>
+        <tr><th>ID</th><th>Nome</th><th>Email</th><th>Ações</th></tr>";
+foreach ($usuarios as $u) {
+    echo "<tr>
+            <td>{$u['id']}</td>
+            <td>" . htmlspecialchars($u['nome']) . "</td>
+            <td>" . htmlspecialchars($u['email']) . "</td>
+            <td>
+              <form method='post' action='crud.php' style='display:inline'>
+                <input type='hidden' name='id' value='{$u['id']}'>
+                <input type='submit' name='acao' value='Excluir' onclick='return confirm(\"Excluir este usuário?\")'>
+              </form>
+            </td>
+          </tr>";
+}
+echo "</table>";
+?>
+
